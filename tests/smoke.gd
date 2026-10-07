@@ -628,10 +628,11 @@ func host_controls() -> void:
 	await wait(0.2)
 	check(bank()["staff_door"], "holding E for %.0fs picks the lock" % Catalog.LOCKPICK_TIME)
 
-	# Shoot a guard through the crosshair.
+	# Shoot a guard through the crosshair, aimed at the chest: a level camera ray grazes the top of the head
+	# and the pistol's spread decides whether it hits.
 	me.place(Vector3(0, 0.05, -10))
 	me.rotation.y = 0.0
-	me._pitch.rotation.x = 0.0
+	me._pitch.rotation.x = deg_to_rad(-5.0)
 	await wait(0.3)
 	var guard: Npc = world.npcs("guard")[0]
 	var center: Vector2 = me.get_viewport().get_visible_rect().size / 2.0
@@ -641,6 +642,7 @@ func host_controls() -> void:
 	var guard_health: int = guard.health
 	await tap("shoot")
 	check(guard.health < guard_health, "a click shot the guard under the crosshair (%d -> %d)" % [guard_health, guard.health])
+	me._pitch.rotation.x = 0.0
 	check(bank()["alarm"], "shooting a guard raises the alarm")
 	check(me.ammo_left() == Catalog.WEAPONS["pistol"]["mag"] - 1, "the shot used a round: %d left" % me.ammo_left())
 	await tap("reload")
