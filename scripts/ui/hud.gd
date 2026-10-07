@@ -211,7 +211,7 @@ func _build_pause(root: Control) -> Control:
 	box.add_child(note)
 	box.add_child(UiTheme.button("Resume", func() -> void: _set_paused(false)))
 	box.add_child(UiTheme.button("Leave game", func() -> void: (get_tree().current_scene as Main).leave_game("")))
-	box.add_child(UiTheme.button("Quit to desktop", func() -> void: get_tree().quit()))
+	box.add_child(UiTheme.button("Quit to desktop", func() -> void: (get_tree().current_scene as Main).quit_game()))
 	return shade
 
 

@@ -104,6 +104,7 @@ func _bag_pile(peer: int, id: String) -> void:
 	var player: Player = GameState.world.player(peer)
 	var piles: Dictionary = _bank()["piles"]
 	player.carrying = piles[id]
+	player.carrying_level = _level()
 	piles[id] = ""
 	GameState.mark_dirty()
 	GameState.fx("sound", ["bag", player.global_position], 0)
@@ -142,16 +143,17 @@ func _on_tick() -> void:
 func _physics_process(_delta: float) -> void:
 	for player: Player in GameState.world.players():
 		if player.carrying != "" and not player.downed and Layout.in_delivery_zone(player.global_position):
-			_deliver(player.carrying, player.display_name)
+			_deliver(player.carrying, player.carrying_level, player.display_name)
 			player.carrying = ""
 	for bag: LootBag in GameState.world.bags():
 		if Layout.in_delivery_zone(bag.global_position):
-			_deliver(bag.kind, "A thrown bag")
+			_deliver(bag.kind, bag.level, "A thrown bag")
 			bag.queue_free()
 
 
-func _deliver(kind: String, by: String) -> void:
-	var value: int = Catalog.BAG_VALUE[kind][_level()]
+## Loot is worth what it was worth in the vault it came from, not what the bank holds today.
+func _deliver(kind: String, level: int, by: String) -> void:
+	var value: int = Catalog.BAG_VALUE[kind][level]
 	GameState.state["cash"] = GameState.cash() + value
 	GameState.mark_dirty()
 	GameState.notify_all("%s delivered %s of %s" % [by, UiTheme.money(value), kind], UiTheme.MONEY)

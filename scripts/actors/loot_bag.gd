@@ -6,6 +6,8 @@ const BAG_LAYER: int = 8
 const SIZE: Vector3 = Vector3(0.5, 0.6, 0.3)
 
 var kind: String = "cash"
+## Host only. The security level of the vault this bag came from, which sets its value.
+var level: int = 1
 
 # Host-owned and replicated.
 var net_pos: Vector3 = Vector3.ZERO
@@ -38,6 +40,12 @@ func setup(bag_kind: String, bag_name: String, pos: Vector3, velocity: Vector3) 
 	add_child(shape)
 	add_child(Build.box_mesh(SIZE, color_of(kind)))
 	World.replicate(self, ["net_pos", "net_rot"], [], 0.05)
+
+
+## True when no wall stands between the player's chest and the bag.
+func in_reach_of(player: Player) -> bool:
+	var query := PhysicsRayQueryParameters3D.create(player.global_position + Vector3(0, 1.0, 0), global_position, Build.WORLD_LAYER)
+	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 
 func _ready() -> void:

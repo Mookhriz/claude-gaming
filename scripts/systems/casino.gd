@@ -10,13 +10,20 @@ func _ready() -> void:
 
 func _bet_ok(peer: int, bet: int) -> bool:
 	assert(Catalog.BET_STEPS.has(bet), "Bet %d is not one of %s" % [bet, Catalog.BET_STEPS])
-	if GameState.world.player(peer).masked:
-		GameState.notify(peer, "The Lucky Rat doesn't serve masks", UiTheme.BAD)
-		return false
-	if GameState.cash() < bet:
-		GameState.notify(peer, "The crew can't cover that bet", UiTheme.BAD)
-		return false
-	return true
+	var player: Player = GameState.world.player(peer)
+	var refusal: String = ""
+	if player.downed:
+		refusal = "You're down"
+	elif player.masked:
+		refusal = "The Lucky Rat doesn't serve masks"
+	elif GameState.cash() < bet:
+		refusal = "The crew can't cover that bet"
+	if refusal == "":
+		return true
+	GameState.notify(peer, refusal, UiTheme.BAD)
+	# A refused bet still gets an answer, so the player's table stops waiting for one.
+	GameState.send_casino_result(peer, {"game": "refused"})
+	return false
 
 
 func _slots(peer: int, bet: int) -> void:

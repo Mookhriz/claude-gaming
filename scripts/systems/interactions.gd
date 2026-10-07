@@ -113,6 +113,8 @@ static func _pile(id: String, player: Player) -> Dictionary:
 	var kind: String = piles[id]
 	if kind == "" or not bank["vault_open"]:
 		return _hidden()
+	if bank["closed"] > 0:
+		return _rule("The bank is closed", false, 0.0)
 	if player.carrying != "":
 		return _rule("Your hands are full (G to throw)", false, 0.0)
 	if not player.masked:

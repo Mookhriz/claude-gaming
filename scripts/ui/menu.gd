@@ -4,6 +4,7 @@ extends Control
 
 signal host_requested
 signal join_requested(address: String)
+signal quit_requested
 
 const CONTROLS: String = "WASD move  ·  Shift sprint  ·  Space jump  ·  Mouse look, click to shoot\nF mask  ·  E interact (hold for jobs)  ·  G throw bag  ·  1-4 weapons  ·  R reload  ·  Esc pause"
 
@@ -45,7 +46,7 @@ func _ready() -> void:
 	_address.text = "127.0.0.1"
 	box.add_child(_address)
 	box.add_child(UiTheme.button("Join", func() -> void: join_requested.emit(_address.text.strip_edges())))
-	box.add_child(UiTheme.button("Quit", func() -> void: get_tree().quit()))
+	box.add_child(UiTheme.button("Quit", func() -> void: quit_requested.emit()))
 
 	_status = UiTheme.label("", 16, UiTheme.TEXT)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

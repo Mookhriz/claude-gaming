@@ -108,6 +108,9 @@ func _play(action: String, extra: Array) -> void:
 
 func _on_result(result: Dictionary) -> void:
 	_waiting = false
+	if result["game"] == "refused":
+		_refresh()
+		return
 	match result["game"]:
 		"slots":
 			var reels: Array = result["reels"]

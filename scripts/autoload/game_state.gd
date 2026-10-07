@@ -70,6 +70,8 @@ func stop() -> void:
 	_interacts.clear()
 	_dirty = false
 	if _clock != null:
+		# A queued Timer still runs this frame and would tick with the empty state.
+		_clock.stop()
 		_clock.queue_free()
 		_clock = null
 
@@ -231,6 +233,20 @@ func wanted() -> int:
 func owns(id: String) -> bool:
 	var unlocks: Array = state["unlocks"]
 	return unlocks.has(id)
+
+
+## The look with every piece this crew doesn't own swapped for that slot's free piece.
+## Profiles are per machine, so they can name pieces another crew bought.
+func wearable_look(look: Dictionary) -> Dictionary:
+	Catalog.assert_look(look)
+	var out: Dictionary = look.duplicate()
+	for slot: String in Catalog.LOOK_SLOTS:
+		if owns(out[slot]):
+			continue
+		for id: String in Catalog.STARTING_UNLOCKS:
+			if Catalog.look_slot(id) == slot:
+				out[slot] = id
+	return out
 
 
 func upgrade_level(key: String) -> int:

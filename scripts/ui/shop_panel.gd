@@ -13,6 +13,7 @@ var _ui: String = ""
 var _cash: Label = null
 var _list: VBoxContainer = null
 var _shown: String = ""
+var _prices: Dictionary = {}
 
 
 func _init(ui: String) -> void:
@@ -38,17 +39,25 @@ func _ready() -> void:
 	_list.add_theme_constant_override("separation", 6)
 	scroll.add_child(_list)
 	box.add_child(UiTheme.button("Close (Esc)", func() -> void: GameState.world.hud.close_panel()))
-	GameState.state_changed.connect(_rebuild)
-	_rebuild()
+	_refresh()
 
 
-func _rebuild() -> void:
-	var profile: Dictionary = Save.load_profile()
-	var signature: String = str([GameState.cash(), GameState.state["unlocks"], GameState.state["upgrades"], Save.look_of(profile)])
+## Cash and Buy buttons update in place every frame. The rows are rebuilt only when what they show
+## changes, and only here, never inside a button's own pressed signal.
+func _process(_delta: float) -> void:
+	_refresh()
+
+
+func _refresh() -> void:
+	_cash.text = "Crew cash: %s" % UiTheme.money(GameState.cash())
+	for button: Button in _prices:
+		button.disabled = GameState.cash() < _prices[button]
+	var wearing: Dictionary = GameState.world.local_player().look
+	var signature: String = str([GameState.state["unlocks"], GameState.state["upgrades"], wearing])
 	if signature == _shown:
 		return
 	_shown = signature
-	_cash.text = "Crew cash: %s" % UiTheme.money(GameState.cash())
+	_prices.clear()
 	for child: Node in _list.get_children():
 		child.free()
 	match _ui:
@@ -57,7 +66,7 @@ func _rebuild() -> void:
 		"workshop":
 			_upgrades()
 		"tailor":
-			_looks(profile)
+			_looks(wearing)
 
 
 func _weapons() -> void:
@@ -84,14 +93,14 @@ func _upgrades() -> void:
 			_row(text, _buy_button(price, func() -> void: GameState.request("buy_upgrade", [key])))
 
 
-func _looks(profile: Dictionary) -> void:
+func _looks(wearing: Dictionary) -> void:
 	for slot: String in Catalog.LOOK_SLOTS:
 		_list.add_child(UiTheme.label(slot.to_upper() + "S", 18, UiTheme.MUTED))
 		var table: Dictionary = Catalog.look_table(slot)
 		for id: String in table:
 			var def: Dictionary = table[id]
 			var text: String = def["name"]
-			if profile[slot] == id:
+			if wearing[slot] == id:
 				_row(text, _tag("Wearing"))
 			elif GameState.owns(id):
 				_row(text, UiTheme.button("Wear", func() -> void: _wear(slot, id)))
@@ -105,7 +114,6 @@ func _wear(slot: String, id: String) -> void:
 	Save.save_profile(profile)
 	GameState.request("set_look", [Save.look_of(profile)])
 	Sfx.play_ui(self, "click")
-	_rebuild()
 
 
 func _row(text: String, action: Control) -> void:
@@ -128,4 +136,5 @@ func _tag(text: String) -> Label:
 func _buy_button(price: int, on_press: Callable) -> Button:
 	var button := UiTheme.button("Buy " + UiTheme.money(price), on_press)
 	button.disabled = GameState.cash() < price
+	_prices[button] = price
 	return button

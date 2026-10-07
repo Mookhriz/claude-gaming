@@ -35,6 +35,8 @@ func _ready() -> void:
 	add_child(_menu)
 	_menu.host_requested.connect(_host)
 	_menu.join_requested.connect(_join)
+	_menu.quit_requested.connect(quit_game)
+	get_tree().auto_accept_quit = false
 	Net.joined.connect(_on_joined)
 	Net.join_failed.connect(_on_join_failed)
 	Net.host_lost.connect(func() -> void: leave_game("The host ended the game."))
@@ -97,6 +99,22 @@ func _on_joined() -> void:
 func _on_join_failed() -> void:
 	Net.close()
 	_menu.show_status("Couldn't reach the host. Check the address, and that UDP port %d is open on their side." % Net.PORT, UiTheme.BAD)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		quit_game()
+
+
+## Leaves the game before quitting. Quitting with the world still up tears it down while the network
+## is open, and every connected friend gets despawns for actors they already lost with the world.
+func quit_game() -> void:
+	_quit.call_deferred()
+
+
+func _quit() -> void:
+	_leave("")
+	get_tree().quit()
 
 
 ## Back to the menu. Deferred so it never frees the world from inside one of the world's own callbacks.

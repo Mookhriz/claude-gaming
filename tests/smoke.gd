@@ -167,7 +167,7 @@ func host_full() -> void:
 	check(me.carrying == "" and world.bags().size() == 1, "G throws the bag")
 	await wait(1.5)
 	var thrown: LootBag = world.bags()[0]
-	me.place(thrown.global_position + Vector3(0.5, 0.05, 0))
+	me.place(thrown.global_position + Vector3(-0.5, 0.05, 0))
 	await wait(0.2)
 	await act("pick_bag", [String(thrown.name)])
 	check(me.carrying == "cash", "a thrown bag can be picked up")

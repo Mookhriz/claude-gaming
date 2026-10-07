@@ -47,6 +47,8 @@ func _buy_look(peer: int, id: String) -> void:
 
 
 func _can_pay(peer: int, price: int) -> bool:
+	if GameState.world.player(peer).downed:
+		return false
 	if GameState.world.player(peer).masked:
 		GameState.notify(peer, "Shops don't serve masks", UiTheme.BAD)
 		return false

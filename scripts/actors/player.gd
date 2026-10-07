@@ -24,6 +24,9 @@ var carrying: String = ""
 var weapon: String = "pistol"
 var look: Dictionary = {}
 
+## Host only. The security level of the vault the carried bag came from, which sets its value.
+var carrying_level: int = 1
+
 # Owner only.
 var _pitch: Node3D = null
 var _camera: Camera3D = null
@@ -165,6 +168,7 @@ func place(pos: Vector3) -> void:
 	net_pos = pos
 	if is_local():
 		velocity = Vector3.ZERO
+		GameState.world.hud.close_panel()
 	else:
 		_teleport.rpc_id(peer_id, pos)
 
@@ -173,6 +177,7 @@ func place(pos: Vector3) -> void:
 func _teleport(pos: Vector3) -> void:
 	position = pos
 	velocity = Vector3.ZERO
+	GameState.world.hud.close_panel()
 
 
 # --- Owner controls ---------------------------------------------------------------
@@ -212,6 +217,8 @@ func _process(delta: float) -> void:
 		if _reload_left <= 0.0:
 			_ammo[weapon] = Catalog.WEAPONS[weapon]["mag"]
 	var hud: Hud = GameState.world.hud
+	if downed:
+		hud.close_panel()
 	if downed or hud.captures_input():
 		_clear_hold()
 		hud.set_focus("", false, 0.0)
@@ -350,7 +357,7 @@ func _find_focus() -> Dictionary:
 		best = {"key": id, "kind": "interact", "id": id, "ui": Layout.INTERACTABLES[id]["ui"], "text": rule["text"], "allowed": rule["allowed"], "hold": rule["hold"]}
 	for bag: LootBag in GameState.world.bags():
 		var distance: float = _flat_distance(bag.global_position)
-		if distance > best_distance:
+		if distance > best_distance or not bag.in_reach_of(self):
 			continue
 		best_distance = distance
 		if carrying == "":

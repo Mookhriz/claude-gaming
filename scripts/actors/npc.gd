@@ -101,6 +101,10 @@ func _follow(delta: float) -> void:
 # --- Host AI --------------------------------------------------------------------
 
 func _see(delta: float) -> void:
+	# A crewmate who left since the last look is freed; forget them now, not at the next look.
+	for i: int in range(_visible.size() - 1, -1, -1):
+		if not is_instance_valid(_visible[i]) or _visible[i].is_queued_for_deletion():
+			_visible.remove_at(i)
 	_sight_timer -= delta
 	if _sight_timer > 0.0:
 		return
